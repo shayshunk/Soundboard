@@ -1,6 +1,12 @@
 import tkinter as tk
 import ttkbootstrap as ttk
 
+
+def AddButton(window):
+    newButton = ttk.Button(master=window, text='Added')
+    newButton.pack(pady=10)
+
+
 # Creating window
 window = ttk.Window(themename='solar')
 
@@ -10,10 +16,8 @@ window.title("Soundboard")
 label = ttk.Label(master=window, text="Soundboard")
 label.pack(pady=20)
 
-textbox = ttk.Text(master=window, height=3)
-textbox.pack()
-
-button = ttk.Button(master=window, text="Add Sound")
+button = ttk.Button(master=window, text="Add Sound",
+                    command=lambda: AddButton(window))
 button.pack()
 
 # Running
