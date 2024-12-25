@@ -11,7 +11,7 @@ mixer.init()
 totalChannels = 8
 mixer.set_num_channels(totalChannels)
 
-columns = 3
+columns = 4
 span = columns - 1
 
 buttons = {}
@@ -23,11 +23,11 @@ checkboxDictionary = {}
 class Frame(ctk.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
+        self.titleFont = ctk.CTkFont(family='Agency FB', size=32)
         self.defaultFont = ctk.CTkFont(family='Agency FB', size=24)
         self.checkboxFont = ctk.CTkFont(family='Agency FB', size=18)
 
         for i in range(columns):
-            self.grid_rowconfigure(i, weight=1)
             self.grid_columnconfigure(i, weight=1)
 
         # Hiding scrollbar
@@ -35,14 +35,28 @@ class Frame(ctk.CTkScrollableFrame):
         yScrollbar.grid_forget()
 
         # Adding widgets onto frame
-        self.label = ctk.CTkLabel(
-            master=self, text="Soundboard", font=self.defaultFont)
-        self.label.grid(row=0, column=0, columnspan=span,
-                        padx=20, pady=20, sticky='WENS')
+        # App title
+        self.titleLabel = ctk.CTkLabel(
+            master=self, text="Soundboard", font=self.titleFont)
+        self.titleLabel.grid(row=0, column=0, columnspan=span,
+                             padx=20, pady=20, sticky='WENS')
 
+        # Add sound button
         self.button = ctk.CTkButton(
             master=self, text="Add Sound", command=lambda: self.AddButton(), font=self.defaultFont)
         self.button.grid(row=0, column=span, padx=20, pady=20, sticky='WENS')
+
+        # Volume text
+        self.volumeLabel = ctk.CTkLabel(
+            master=self, text="Master Volume", font=self.defaultFont)
+        self.volumeLabel.grid(row=1, column=0, padx=20, pady=20, sticky='WENS')
+
+        # Volume slider
+        self.volume = ctk.CTkSlider(
+            master=self, from_=0, to=1.0, command=self.ChangeVolume)
+        self.volume.set(1.0)
+        self.volume.grid(row=1, column=1, columnspan=span,
+                         padx=20, pady=20, sticky="EWNS")
 
     def AddButton(self):
         # Assigning new button to dictionary
@@ -51,7 +65,7 @@ class Frame(ctk.CTkScrollableFrame):
         # Figuring out where to place new button
         totalButtons = len(buttons)
         columnSpot = totalButtons % columns
-        rowSpot = 2 * floor(totalButtons / columns) + 1
+        rowSpot = 2 * floor(totalButtons / columns) + 2
 
         # Creating new button for sound
         buttons[buttonId] = ctk.CTkButton(
@@ -72,7 +86,7 @@ class Frame(ctk.CTkScrollableFrame):
             text="Enter sound name:", title="Name your buton!")
         buttonName = dialog.get_input()
 
-        if buttonName is None:
+        if buttonName is None or buttonName == "":
             buttonName = "Unnamed"
 
         buttons[buttonId].configure(text=buttonName)
@@ -101,6 +115,7 @@ class Frame(ctk.CTkScrollableFrame):
         # Grabbing empty sound channel
         newChannel = mixer.find_channel(force=True)
         channelDictionary[buttonId] = newChannel
+        print(newChannel)
 
         # Checking if loop is on
         if checkboxDictionary[buttonId].get():
@@ -113,6 +128,10 @@ class Frame(ctk.CTkScrollableFrame):
         if not checkboxVar.get():
             if channelDictionary[buttonId].get_busy():
                 channelDictionary[buttonId].stop()
+
+    def ChangeVolume(self, value):
+        for id in range(totalChannels):
+            mixer.Channel(id).set_volume(value)
 
 
 class App(ctk.CTk):
