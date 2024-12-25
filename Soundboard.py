@@ -17,13 +17,14 @@ span = columns - 1
 buttons = {}
 soundDictionary = {}
 channelDictionary = {}
+checkboxDictionary = {}
 
 
 class Frame(ctk.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         self.defaultFont = ctk.CTkFont(family='Agency FB', size=24)
-        self.defaultFont2 = ctk.CTkFont(family='Agency FB', size=18)
+        self.checkboxFont = ctk.CTkFont(family='Agency FB', size=18)
 
         for i in range(columns):
             self.grid_rowconfigure(i, weight=1)
@@ -40,10 +41,10 @@ class Frame(ctk.CTkScrollableFrame):
                         padx=20, pady=20, sticky='WENS')
 
         self.button = ctk.CTkButton(
-            master=self, text="Add Sound", command=lambda: self.AddButton(app), font=self.defaultFont)
+            master=self, text="Add Sound", command=lambda: self.AddButton(), font=self.defaultFont)
         self.button.grid(row=0, column=span, padx=20, pady=20, sticky='WENS')
 
-    def AddButton(self, app):
+    def AddButton(self):
         # Assigning new button to dictionary
         buttonId = str(len(buttons) + 1)
 
@@ -60,15 +61,20 @@ class Frame(ctk.CTkScrollableFrame):
         buttons[buttonId].grid(row=rowSpot, column=columnSpot,
                                padx=20, pady=15, sticky="ew")
 
-        looper = ctk.CTkCheckBox(
-            master=self, text="Loop?", font=self.defaultFont2)
-        looper.grid(row=rowSpot+1, column=columnSpot,
-                    padx=20, pady=0, sticky='w')
+        checkboxVar = ctk.BooleanVar()
+        checkboxDictionary[buttonId] = ctk.CTkCheckBox(
+            master=self, text="Loop?", font=self.checkboxFont, variable=checkboxVar, command=lambda: self.CheckboxChecked(buttonId, checkboxVar))
+        checkboxDictionary[buttonId].grid(row=rowSpot+1, column=columnSpot,
+                                          padx=20, pady=0, sticky='w')
 
         # Adding entry box to get name for sound
         dialog = ctk.CTkInputDialog(
             text="Enter sound name:", title="Name your buton!")
         buttonName = dialog.get_input()
+
+        if buttonName is None:
+            buttonName = "Unnamed"
+
         buttons[buttonId].configure(text=buttonName)
 
         # Changing what clicking the button does
@@ -83,11 +89,30 @@ class Frame(ctk.CTkScrollableFrame):
         buttons[buttonId].configure(command=lambda: self.PlaySound(buttonId))
 
     def PlaySound(self, buttonId):
+        # Checking if that sound is already playing
+        if buttonId in channelDictionary:
+            if channelDictionary[buttonId].get_busy():
+                channelDictionary[buttonId].stop()
+
+        # Grabbing sound file
         soundFile = soundDictionary[buttonId]
         sound = mixer.Sound(soundFile)
+
+        # Grabbing empty sound channel
         newChannel = mixer.find_channel(force=True)
         channelDictionary[buttonId] = newChannel
-        newChannel.play(sound)
+
+        # Checking if loop is on
+        if checkboxDictionary[buttonId].get():
+            newChannel.play(sound, loops=-1)
+        else:
+            newChannel.play(sound)
+
+    def CheckboxChecked(self, buttonId, checkboxVar):
+        # Checking if unchecked or checked
+        if not checkboxVar.get():
+            if channelDictionary[buttonId].get_busy():
+                channelDictionary[buttonId].stop()
 
 
 class App(ctk.CTk):
