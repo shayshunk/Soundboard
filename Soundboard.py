@@ -2,6 +2,7 @@ import tkinter as tk
 import customtkinter as ctk
 from pygame import mixer
 from math import floor
+import pywinstyles
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -22,6 +23,7 @@ class Frame(ctk.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         self.defaultFont = ctk.CTkFont(family='Agency FB', size=24)
+        self.defaultFont2 = ctk.CTkFont(family='Agency FB', size=18)
 
         for i in range(columns):
             self.grid_rowconfigure(i, weight=1)
@@ -30,8 +32,6 @@ class Frame(ctk.CTkScrollableFrame):
         # Hiding scrollbar
         yScrollbar = self._scrollbar
         yScrollbar.grid_forget()
-        # get the default colors of frame
-        frame_fg = ctk.ThemeManager.theme["CTkFrame"]["fg_color"]
 
         # Adding widgets onto frame
         self.label = ctk.CTkLabel(
@@ -43,21 +43,6 @@ class Frame(ctk.CTkScrollableFrame):
             master=self, text="Add Sound", command=lambda: self.AddButton(app), font=self.defaultFont)
         self.button.grid(row=0, column=span, padx=20, pady=20, sticky='WENS')
 
-    def PlaySound(self, buttonId):
-        soundFile = soundDictionary[buttonId]
-        sound = mixer.Sound(soundFile)
-        newChannel = mixer.find_channel(force=True)
-        channelDictionary[buttonId] = newChannel
-        newChannel.play(sound)
-
-    def AddSound(self, buttonId):
-        # Asking user to associate file with button
-        soundFile = tk.filedialog.askopenfilename()
-
-        # Associating sound with dictionary
-        soundDictionary[buttonId] = soundFile
-        buttons[buttonId].configure(command=lambda: self.PlaySound(buttonId))
-
     def AddButton(self, app):
         # Assigning new button to dictionary
         buttonId = str(len(buttons) + 1)
@@ -65,7 +50,7 @@ class Frame(ctk.CTkScrollableFrame):
         # Figuring out where to place new button
         totalButtons = len(buttons)
         columnSpot = totalButtons % columns
-        rowSpot = floor(totalButtons / columns) + 1
+        rowSpot = 2 * floor(totalButtons / columns) + 1
 
         # Creating new button for sound
         buttons[buttonId] = ctk.CTkButton(
@@ -73,7 +58,12 @@ class Frame(ctk.CTkScrollableFrame):
         buttons[buttonId].configure(command=self.AddSound(buttonId))
         buttons[buttonId].configure(width=150, height=100)
         buttons[buttonId].grid(row=rowSpot, column=columnSpot,
-                               padx=20, pady=20, sticky="ew")
+                               padx=20, pady=15, sticky="ew")
+
+        looper = ctk.CTkCheckBox(
+            master=self, text="Loop?", font=self.defaultFont2)
+        looper.grid(row=rowSpot+1, column=columnSpot,
+                    padx=20, pady=0, sticky='w')
 
         # Adding entry box to get name for sound
         dialog = ctk.CTkInputDialog(
@@ -83,6 +73,21 @@ class Frame(ctk.CTkScrollableFrame):
 
         # Changing what clicking the button does
         buttons[buttonId].configure(command=lambda: self.PlaySound(buttonId))
+
+    def AddSound(self, buttonId):
+        # Asking user to associate file with button
+        soundFile = tk.filedialog.askopenfilename()
+
+        # Associating sound with dictionary
+        soundDictionary[buttonId] = soundFile
+        buttons[buttonId].configure(command=lambda: self.PlaySound(buttonId))
+
+    def PlaySound(self, buttonId):
+        soundFile = soundDictionary[buttonId]
+        sound = mixer.Sound(soundFile)
+        newChannel = mixer.find_channel(force=True)
+        channelDictionary[buttonId] = newChannel
+        newChannel.play(sound)
 
 
 class App(ctk.CTk):
