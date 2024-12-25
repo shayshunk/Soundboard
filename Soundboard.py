@@ -12,7 +12,7 @@ mixer.init()
 totalChannels = 8
 mixer.set_num_channels(totalChannels)
 
-columns = 4
+columns = 3
 span = columns - 1
 
 buttons = {}
