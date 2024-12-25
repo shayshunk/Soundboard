@@ -1,6 +1,7 @@
 import tkinter as tk
 import customtkinter as ctk
 from pygame import mixer
+from pygame import time
 from math import floor
 import pywinstyles
 
@@ -107,6 +108,7 @@ class Frame(ctk.CTkScrollableFrame):
         if buttonId in channelDictionary:
             if channelDictionary[buttonId].get_busy():
                 channelDictionary[buttonId].stop()
+                del channelDictionary[buttonId]
 
         # Grabbing sound file
         soundFile = soundDictionary[buttonId]
@@ -115,7 +117,6 @@ class Frame(ctk.CTkScrollableFrame):
         # Grabbing empty sound channel
         newChannel = mixer.find_channel(force=True)
         channelDictionary[buttonId] = newChannel
-        print(newChannel)
 
         # Checking if loop is on
         if checkboxDictionary[buttonId].get():
