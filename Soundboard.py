@@ -3,7 +3,7 @@ import customtkinter as ctk
 from pygame import mixer
 from pygame import time
 from math import floor
-import pywinstyles
+from CTkToolTip import *
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -58,6 +58,9 @@ class Frame(ctk.CTkScrollableFrame):
         self.volume.set(1.0)
         self.volume.grid(row=1, column=1, columnspan=span,
                          padx=20, pady=20, sticky="EWNS")
+
+        # Tool tip
+        self.sliderTooltip = CTkToolTip(self.volume, message="100")
 
     def AddButton(self):
         # Assigning new button to dictionary
@@ -131,6 +134,7 @@ class Frame(ctk.CTkScrollableFrame):
                 channelDictionary[buttonId].stop()
 
     def ChangeVolume(self, value):
+        self.sliderTooltip.configure(message=int(value * 100))
         for id in range(totalChannels):
             mixer.Channel(id).set_volume(value)
 
