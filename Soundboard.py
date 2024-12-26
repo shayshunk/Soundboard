@@ -12,13 +12,16 @@ mixer.init()
 totalChannels = 8
 mixer.set_num_channels(totalChannels)
 
-columns = 3
-span = columns - 1
+columns = 4
+span = columns - 2
 
 buttons = {}
 soundDictionary = {}
+soundFileDictionary = {}
 channelDictionary = {}
 checkboxDictionary = {}
+sliderDictionary = {}
+tooltipDictionary = {}
 
 
 class Frame(ctk.CTkScrollableFrame):
@@ -29,7 +32,7 @@ class Frame(ctk.CTkScrollableFrame):
         self.checkboxFont = ctk.CTkFont(family='Agency FB', size=18)
 
         for i in range(columns):
-            self.grid_columnconfigure(i, weight=1)
+            self.grid_columnconfigure(i, weight=1, uniform="group")
 
         # Hiding scrollbar
         yScrollbar = self._scrollbar
@@ -45,22 +48,24 @@ class Frame(ctk.CTkScrollableFrame):
         # Add sound button
         self.button = ctk.CTkButton(
             master=self, text="Add Sound", command=lambda: self.AddButton(), font=self.defaultFont)
-        self.button.grid(row=0, column=span, padx=20, pady=20, sticky='WENS')
+        self.button.grid(row=0, column=span, columnspan=2,
+                         padx=20, pady=20, sticky='WENS')
 
         # Volume text
         self.volumeLabel = ctk.CTkLabel(
             master=self, text="Master Volume", font=self.defaultFont)
-        self.volumeLabel.grid(row=1, column=0, padx=20, pady=20, sticky='WENS')
+        self.volumeLabel.grid(row=1, column=0, columnspan=2,
+                              padx=20, pady=20, sticky='WENS')
 
         # Volume slider
         self.volume = ctk.CTkSlider(
             master=self, from_=0, to=1.0, command=self.ChangeVolume)
         self.volume.set(1.0)
-        self.volume.grid(row=1, column=1, columnspan=span,
+        self.volume.grid(row=1, column=2, columnspan=span,
                          padx=20, pady=20, sticky="EWNS")
 
         # Tool tip
-        self.sliderTooltip = CTkToolTip(self.volume, message="100")
+        self.sliderTooltip = CTkToolTip(self.volume, message="Volume: 100")
 
     def AddButton(self):
         # Assigning new button to dictionary
@@ -68,22 +73,39 @@ class Frame(ctk.CTkScrollableFrame):
 
         # Figuring out where to place new button
         totalButtons = len(buttons)
-        columnSpot = totalButtons % columns
-        rowSpot = 2 * floor(totalButtons / columns) + 2
+        columnSpot = ((2 * totalButtons) % columns)
+        rowSpot = 2 * floor(totalButtons * 2 / columns) + 2
+
+        paddingx = (10, 10)
+
+        if columnSpot == 0:
+            paddingx = (20, 10)
+        elif columnSpot == columns - 2:
+            paddingx = (10, 20)
 
         # Creating new button for sound
         buttons[buttonId] = ctk.CTkButton(
             master=self, text="", font=self.defaultFont)
         buttons[buttonId].configure(command=self.AddSound(buttonId))
         buttons[buttonId].configure(width=150, height=100)
-        buttons[buttonId].grid(row=rowSpot, column=columnSpot,
-                               padx=20, pady=15, sticky="ew")
+        buttons[buttonId].grid(row=rowSpot, column=columnSpot, columnspan=2,
+                               padx=paddingx, pady=15, sticky="ewns")
 
         checkboxVar = ctk.BooleanVar()
         checkboxDictionary[buttonId] = ctk.CTkCheckBox(
             master=self, text="Loop?", font=self.checkboxFont, variable=checkboxVar, command=lambda: self.CheckboxChecked(buttonId, checkboxVar))
         checkboxDictionary[buttonId].grid(row=rowSpot+1, column=columnSpot,
-                                          padx=20, pady=0, sticky='w')
+                                          padx=(20, 0), pady=0)
+
+        sliderDictionary[buttonId] = ctk.CTkSlider(
+            master=self, from_=0, to=1.0)
+        sliderDictionary[buttonId].set(1.0)
+        sliderDictionary[buttonId].configure(
+            command=lambda value: self.ChangeChannelVolume(buttonId, value))
+        sliderDictionary[buttonId].grid(
+            row=rowSpot+1, column=columnSpot+1, padx=(0, 20), pady=0, sticky='ew')
+        tooltipDictionary[buttonId] = CTkToolTip(
+            sliderDictionary[buttonId], message="Volume: 100")
 
         # Adding entry box to get name for sound
         dialog = ctk.CTkInputDialog(
@@ -103,7 +125,7 @@ class Frame(ctk.CTkScrollableFrame):
         soundFile = tk.filedialog.askopenfilename()
 
         # Associating sound with dictionary
-        soundDictionary[buttonId] = soundFile
+        soundFileDictionary[buttonId] = soundFile
         buttons[buttonId].configure(command=lambda: self.PlaySound(buttonId))
 
     def PlaySound(self, buttonId):
@@ -114,8 +136,8 @@ class Frame(ctk.CTkScrollableFrame):
                 del channelDictionary[buttonId]
 
         # Grabbing sound file
-        soundFile = soundDictionary[buttonId]
-        sound = mixer.Sound(soundFile)
+        soundFile = soundFileDictionary[buttonId]
+        soundDictionary[buttonId] = mixer.Sound(soundFile)
 
         # Grabbing empty sound channel
         newChannel = mixer.find_channel(force=True)
@@ -123,9 +145,9 @@ class Frame(ctk.CTkScrollableFrame):
 
         # Checking if loop is on
         if checkboxDictionary[buttonId].get():
-            newChannel.play(sound, loops=-1)
+            newChannel.play(soundDictionary[buttonId], loops=-1)
         else:
-            newChannel.play(sound)
+            newChannel.play(soundDictionary[buttonId])
 
     def CheckboxChecked(self, buttonId, checkboxVar):
         # Checking if unchecked or checked
@@ -134,9 +156,18 @@ class Frame(ctk.CTkScrollableFrame):
                 channelDictionary[buttonId].stop()
 
     def ChangeVolume(self, value):
-        self.sliderTooltip.configure(message=int(value * 100))
+        self.sliderTooltip.configure(
+            message="Volume: " + str(int(value * 100)))
         for id in range(totalChannels):
             mixer.Channel(id).set_volume(value)
+
+    def ChangeChannelVolume(self, buttonId, value):
+        if buttonId in tooltipDictionary:
+            tooltipDictionary[buttonId].configure(
+                message="Volume: " + str(int(value * 100)))
+
+        if buttonId in soundDictionary:
+            soundDictionary[buttonId].set_volume(value)
 
 
 class App(ctk.CTk):
