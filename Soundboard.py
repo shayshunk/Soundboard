@@ -4,6 +4,7 @@ from pygame import mixer
 from pygame import time
 from math import floor
 from CTkToolTip import *
+import pandas as pd
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -177,13 +178,16 @@ class App(ctk.CTk):
         self.grid_columnconfigure(0, weight=1)
         self.title("Soundboard")
 
-        # get the default colors of frame
-        frame_fg = ctk.ThemeManager.theme["CTkFrame"]["fg_color"]
-
         mainFrame = Frame(master=self, width=600, height=600,
                           corner_radius=0, fg_color="transparent")
         self.my_frame = mainFrame
         self.my_frame.grid(row=0, column=0, sticky="nsew")
+
+    def LoadData(self):
+        mainData = pd.DataFrame()
+
+    def AddData(self):
+        print("Adding")
 
 
 # Creating app
