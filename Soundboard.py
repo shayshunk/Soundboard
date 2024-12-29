@@ -7,6 +7,7 @@ from CTkToolTip import *
 import pandas as pd
 from CTkMenuBar import *
 import pprint
+import csv
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -73,12 +74,22 @@ class Frame(ctk.CTkScrollableFrame):
         # Tool tip
         self.sliderTooltip = CTkToolTip(self.volume, message="Volume: 100")
 
-    def AddButton(self):
-        # Asking user to associate file with button
-        soundFile = tk.filedialog.askopenfilename()
+    def AddButton(self, soundFile=None, buttonName=None):
 
-        if soundFile is None or soundFile is '':
-            return
+        # Asking user to associate file with button
+        if soundFile is None:
+            soundFile = tk.filedialog.askopenfilename()
+            if soundFile is None or soundFile is '':
+                return
+
+        if buttonName is None:
+            # Adding entry box to get name for sound
+            dialog = ctk.CTkInputDialog(
+                text="Enter sound name:", title="Name your buton!")
+            buttonName = dialog.get_input()
+
+        if buttonName == "":
+            buttonName = "Unnamed"
 
         # Assigning new button to dictionary
         buttonId = str(len(buttons) + 1)
@@ -121,14 +132,6 @@ class Frame(ctk.CTkScrollableFrame):
         tooltipDictionary[buttonId] = CTkToolTip(
             sliderDictionary[buttonId], message="Volume: 100")
 
-        # Adding entry box to get name for sound
-        dialog = ctk.CTkInputDialog(
-            text="Enter sound name:", title="Name your buton!")
-        buttonName = dialog.get_input()
-
-        if buttonName == "":
-            buttonName = "Unnamed"
-
         buttons[buttonId].configure(text=buttonName)
 
         # Changing what clicking the button does
@@ -138,6 +141,15 @@ class Frame(ctk.CTkScrollableFrame):
         buttonNameDictionary[buttonId] = buttons[buttonId].cget("text")
         pprint.pprint(buttonNameDictionary)
         pprint.pprint(soundFileDictionary)
+
+        # Writing to file
+        with open("Data.csv", 'w', newline='') as file:
+            writer = csv.writer(file)
+
+            for key, value in soundFileDictionary.items():
+                writer.writerow([value])
+            for key, value in buttonNameDictionary.items():
+                writer.writerow([value])
 
     def PlaySound(self, buttonId):
         # Checking if that sound is already playing
