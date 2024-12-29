@@ -6,6 +6,7 @@ from math import floor
 from CTkToolTip import *
 import pandas as pd
 from CTkMenuBar import *
+import pprint
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -14,10 +15,11 @@ mixer.init()
 totalChannels = 8
 mixer.set_num_channels(totalChannels)
 
-columns = 4
+columns = 6
 span = columns - 2
 
 buttons = {}
+buttonNameDictionary = {}
 soundDictionary = {}
 soundFileDictionary = {}
 channelDictionary = {}
@@ -72,8 +74,17 @@ class Frame(ctk.CTkScrollableFrame):
         self.sliderTooltip = CTkToolTip(self.volume, message="Volume: 100")
 
     def AddButton(self):
+        # Asking user to associate file with button
+        soundFile = tk.filedialog.askopenfilename()
+
+        if soundFile is None or soundFile is '':
+            return
+
         # Assigning new button to dictionary
         buttonId = str(len(buttons) + 1)
+
+        # Associating sound with dictionary
+        soundFileDictionary[buttonId] = soundFile
 
         # Figuring out where to place new button
         totalButtons = len(buttons)
@@ -90,14 +101,13 @@ class Frame(ctk.CTkScrollableFrame):
         # Creating new button for sound
         buttons[buttonId] = ctk.CTkButton(
             master=self, text="", font=self.defaultFont)
-        buttons[buttonId].configure(command=self.AddSound(buttonId))
         buttons[buttonId].configure(width=150, height=100)
         buttons[buttonId].grid(row=rowSpot, column=columnSpot, columnspan=2,
                                padx=paddingx, pady=15, sticky="ewns")
 
-        checkboxVar = ctk.BooleanVar()
+        # checkboxVar = ctk.BooleanVar()
         checkboxDictionary[buttonId] = ctk.CTkCheckBox(
-            master=self, text="Loop?", font=self.checkboxFont, variable=checkboxVar, command=lambda: self.CheckboxChecked(buttonId, checkboxVar))
+            master=self, text="Loop?", font=self.checkboxFont, command=lambda: self.CheckboxChecked(buttonId))
         checkboxDictionary[buttonId].grid(row=rowSpot+1, column=columnSpot,
                                           padx=(20, 0), pady=0)
 
@@ -116,7 +126,7 @@ class Frame(ctk.CTkScrollableFrame):
             text="Enter sound name:", title="Name your buton!")
         buttonName = dialog.get_input()
 
-        if buttonName is None or buttonName == "":
+        if buttonName == "":
             buttonName = "Unnamed"
 
         buttons[buttonId].configure(text=buttonName)
@@ -124,13 +134,10 @@ class Frame(ctk.CTkScrollableFrame):
         # Changing what clicking the button does
         buttons[buttonId].configure(command=lambda: self.PlaySound(buttonId))
 
-    def AddSound(self, buttonId):
-        # Asking user to associate file with button
-        soundFile = tk.filedialog.askopenfilename()
-
-        # Associating sound with dictionary
-        soundFileDictionary[buttonId] = soundFile
-        buttons[buttonId].configure(command=lambda: self.PlaySound(buttonId))
+        # Grabbing names for dictionary
+        buttonNameDictionary[buttonId] = buttons[buttonId].cget("text")
+        pprint.pprint(buttonNameDictionary)
+        pprint.pprint(soundFileDictionary)
 
     def PlaySound(self, buttonId):
         # Checking if that sound is already playing
@@ -153,9 +160,9 @@ class Frame(ctk.CTkScrollableFrame):
         else:
             newChannel.play(soundDictionary[buttonId])
 
-    def CheckboxChecked(self, buttonId, checkboxVar):
+    def CheckboxChecked(self, buttonId):
         # Checking if unchecked or checked
-        if not checkboxVar.get():
+        if not checkboxDictionary[buttonId].get():
             if channelDictionary[buttonId].get_busy():
                 channelDictionary[buttonId].stop()
 
