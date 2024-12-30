@@ -74,7 +74,7 @@ class Frame(ctk.CTkScrollableFrame):
         # Asking user to associate file with button
         if soundFile is None:
             soundFile = tk.filedialog.askopenfilename()
-            if soundFile is None or soundFile is '':
+            if soundFile is None or soundFile == '':
                 return
 
         if buttonName is None:
@@ -91,6 +91,7 @@ class Frame(ctk.CTkScrollableFrame):
 
         # Associating sound with dictionary
         soundFileDictionary[buttonId] = soundFile
+        soundDictionary[buttonId] = mixer.Sound(soundFile)
 
         # Figuring out where to place new button
         totalButtons = len(buttons)
@@ -134,8 +135,6 @@ class Frame(ctk.CTkScrollableFrame):
 
         # Grabbing names for dictionary
         buttonNameDictionary[buttonId] = buttons[buttonId].cget("text")
-        pprint.pprint(buttonNameDictionary)
-        pprint.pprint(soundFileDictionary)
 
         # Writing to file
         with open("Data.csv", 'w', newline='') as file:
@@ -153,9 +152,7 @@ class Frame(ctk.CTkScrollableFrame):
                 channelDictionary[buttonId].stop()
                 del channelDictionary[buttonId]
 
-        # Grabbing sound file
-        soundFile = soundFileDictionary[buttonId]
-        soundDictionary[buttonId] = mixer.Sound(soundFile)
+        pprint.pprint(soundDictionary)
 
         # Grabbing empty sound channel
         newChannel = mixer.find_channel(force=True)
