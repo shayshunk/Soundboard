@@ -16,8 +16,8 @@ mixer.init()
 totalChannels = 8
 mixer.set_num_channels(totalChannels)
 
-columns = 6
-span = columns - 2
+columns = 9
+span = columns - 3
 
 buttons = {}
 buttonNameDictionary = {}
@@ -40,8 +40,10 @@ class Frame(ctk.CTkScrollableFrame):
         self.checkboxFont = ctk.CTkFont(family='Agency FB', size=18)
 
         for i in range(columns):
-            self.grid_columnconfigure(i, weight=1, uniform="group")
-
+            if i % 3 == 2:
+                self.grid_columnconfigure(i, weight=3, uniform="group1")
+            else:
+                self.grid_columnconfigure(i, weight=0, uniform="group2")
         # Hiding scrollbar
         yScrollbar = self._scrollbar
         yScrollbar.grid_forget()
@@ -49,6 +51,11 @@ class Frame(ctk.CTkScrollableFrame):
         # Grabbing loop image
         filepath = "icons8-loop-100.png"
         self.loopImage = ctk.CTkImage(light_image=Image.open(
+            filepath), dark_image=Image.open(filepath), size=(25, 25))
+
+        # Grabbing delete image
+        filepath = "icons8-delete-90.png"
+        self.deleteImage = ctk.CTkImage(light_image=Image.open(
             filepath), dark_image=Image.open(filepath), size=(25, 25))
 
         # Adding widgets onto frame
@@ -61,20 +68,20 @@ class Frame(ctk.CTkScrollableFrame):
         # Add sound button
         self.button = ctk.CTkButton(
             master=self, text="Add Sound", command=lambda: self.AddButton(), font=self.defaultFont)
-        self.button.grid(row=0, column=span, columnspan=2,
+        self.button.grid(row=0, column=span, columnspan=3,
                          padx=20, pady=20, sticky='WENS')
 
         # Volume text
         self.volumeLabel = ctk.CTkLabel(
             master=self, text="Master Volume", font=self.defaultFont)
-        self.volumeLabel.grid(row=1, column=0, columnspan=2,
+        self.volumeLabel.grid(row=1, column=0, columnspan=3,
                               padx=20, pady=20, sticky='WENS')
 
         # Volume slider
         self.volume = ctk.CTkSlider(
             master=self, from_=0, to=1.0, command=self.ChangeVolume)
         self.volume.set(1.0)
-        self.volume.grid(row=1, column=2, columnspan=span,
+        self.volume.grid(row=1, column=3, columnspan=span,
                          padx=20, pady=20, sticky="EWNS")
 
         # Tool tip
@@ -117,22 +124,24 @@ class Frame(ctk.CTkScrollableFrame):
 
         # Figuring out where to place new button
         totalButtons = buttonId
-        columnSpot = ((2 * totalButtons) % columns)
-        rowSpot = 2 * floor(totalButtons * 2 / columns) + 2
+        columnSpot = ((3 * totalButtons) % columns)
+        rowSpot = 2 * floor(totalButtons * 3 / columns) + 2
 
         paddingx = (10, 10)
 
         if columnSpot == 0:
             paddingx = (20, 10)
-        elif columnSpot == columns - 2:
+        elif columnSpot == columns - 3:
             paddingx = (10, 20)
 
         # Creating new button for sound
         buttons[buttonId] = ctk.CTkButton(
             master=self, text="", font=self.defaultFont)
         buttons[buttonId].configure(width=150, height=100)
-        buttons[buttonId].grid(row=rowSpot, column=columnSpot, columnspan=2,
+        buttons[buttonId].grid(row=rowSpot, column=columnSpot, columnspan=3,
                                padx=paddingx, pady=15, sticky="ewns")
+        print("Column spot:", columnSpot)
+        print("Row spot:", rowSpot)
 
         # loopDictionary[buttonId] = ctk.CTkCheckBox(
         #     master=self, text="Loop?", font=self.checkboxFont, command=lambda: self.CheckboxChecked(buttonId))
@@ -141,8 +150,15 @@ class Frame(ctk.CTkScrollableFrame):
 
         loopDictionary[buttonId] = ctk.CTkButton(
             master=self, text="", image=self.loopImage, fg_color="transparent", hover_color="#3c3c3c", command=lambda: self.LoopChecked(buttonId))
+        loopDictionary[buttonId].configure(width=50, height=50)
         loopDictionary[buttonId].grid(row=rowSpot+1, column=columnSpot,
-                                      padx=(20, 0), pady=0)
+                                      padx=(5, 0), pady=0)
+
+        deleteDictionary[buttonId] = ctk.CTkButton(
+            master=self, text="", image=self.deleteImage, fg_color="transparent", hover_color="#3c3c3c", command=lambda: self.DeleteSound(buttonId))
+        deleteDictionary[buttonId].configure(width=50, height=50)
+        deleteDictionary[buttonId].grid(
+            row=rowSpot+1, column=columnSpot+1, padx=(5, 0), pady=0)
 
         sliderDictionary[buttonId] = ctk.CTkSlider(
             master=self, from_=0, to=1.0)
@@ -150,7 +166,7 @@ class Frame(ctk.CTkScrollableFrame):
         sliderDictionary[buttonId].configure(
             command=lambda value: self.ChangeChannelVolume(buttonId, value))
         sliderDictionary[buttonId].grid(
-            row=rowSpot+1, column=columnSpot+1, padx=(0, 20), pady=0, sticky='ew')
+            row=rowSpot+1, column=columnSpot+2, padx=(0, 20), pady=0, sticky='ew')
         tooltipDictionary[buttonId] = CTkToolTip(
             sliderDictionary[buttonId], message="Volume: 100")
 
@@ -168,11 +184,6 @@ class Frame(ctk.CTkScrollableFrame):
 
             writer.writerow(soundFileDictionary.values())
             writer.writerow(buttonNameDictionary.values())
-
-        #     for key, value in soundFileDictionary.items():
-        #         writer.writerow([value])
-        #     for key, value in buttonNameDictionary.items():
-        #         writer.writerow([value])
 
     def PlaySound(self, buttonId):
         # Checking if that sound is already playing
@@ -213,6 +224,28 @@ class Frame(ctk.CTkScrollableFrame):
 
         if buttonId in soundDictionary:
             soundDictionary[buttonId].set_volume(value)
+
+    def DeleteSound(self, buttonId):
+        # Destroying and then updating dictionaries
+
+        buttons[buttonId].destroy()
+        del buttons[buttonId]
+
+        deleteDictionary[buttonId].destroy()
+        del deleteDictionary[buttonId]
+
+        sliderDictionary[buttonId].destroy()
+        del sliderDictionary[buttonId]
+
+        loopDictionary[buttonId].destroy()
+        del loopDictionary[buttonId]
+
+        del soundDictionary[buttonId]
+        del soundFileDictionary[buttonId]
+        if buttonId in channelDictionary:
+            del channelDictionary[buttonId]
+        del buttonNameDictionary[buttonId]
+        del tooltipDictionary[buttonId]
 
 
 class App(ctk.CTk):
