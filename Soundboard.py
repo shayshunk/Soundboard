@@ -83,19 +83,31 @@ class Frame(ctk.CTkScrollableFrame):
         self.volume.set(1.0)
         self.volume.grid(row=1, column=3, columnspan=span,
                          padx=20, pady=20, sticky="EWNS")
+        self.volume.bind("<ButtonRelease-1>",
+                         lambda event: self.VolumeSave(event))
 
         # Tool tip
         self.sliderTooltip = CTkToolTip(self.volume, message="Volume: 100")
 
         self.LoadData()
 
+    def VolumeSave(self, event):
+        self.WriteToFile()
+
     def LoadData(self):
-        dataframe = pd.read_csv("Data.csv", header=None)
+        # Checking if csv is empty
+        try:
+            dataframe = pd.read_csv("Data.csv", header=None)
+        except pd.errors.EmptyDataError:
+            return
 
         soundFileDictionary = dataframe.loc[0].to_dict()
         buttonNameDictionary = dataframe.loc[1].to_dict()
         loopValues = dataframe.loc[2].to_dict()
         sliderValues = dataframe.loc[3].to_dict()
+        volumeValue = float(dataframe.loc[4][0])
+
+        self.volume.set(volumeValue)
 
         for i in range(len(buttonNameDictionary)):
             self.AddButton(
@@ -170,6 +182,8 @@ class Frame(ctk.CTkScrollableFrame):
         sliderDictionary[buttonId].set(volume)
         sliderDictionary[buttonId].configure(
             command=lambda value: self.ChangeChannelVolume(buttonId, value))
+        sliderDictionary[buttonId].bind("<ButtonRelease-1>",
+                                        lambda event: self.VolumeSave(event))
         sliderDictionary[buttonId].grid(
             row=rowSpot+1, column=columnSpot+2, padx=(0, 20), pady=0, sticky='ew')
         tooltipDictionary[buttonId] = CTkToolTip(
@@ -272,6 +286,10 @@ class Frame(ctk.CTkScrollableFrame):
 
             writer.writerow(loopValues)
             writer.writerow(sliderValues)
+
+            volume = []
+            volume.append(self.volume.get())
+            writer.writerow(volume)
 
 
 class App(ctk.CTk):
