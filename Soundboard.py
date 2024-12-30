@@ -7,8 +7,9 @@ from CTkToolTip import *
 import pprint
 import csv
 import pandas as pd
+from PIL import Image
 
-ctk.set_appearance_mode("System")
+ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 mixer.init()
@@ -23,9 +24,13 @@ buttonNameDictionary = {}
 soundDictionary = {}
 soundFileDictionary = {}
 channelDictionary = {}
-checkboxDictionary = {}
+loopDictionary = {}
 sliderDictionary = {}
 tooltipDictionary = {}
+deleteDictionary = {}
+
+loopColor = "#383838"
+
 
 class Frame(ctk.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
@@ -40,6 +45,11 @@ class Frame(ctk.CTkScrollableFrame):
         # Hiding scrollbar
         yScrollbar = self._scrollbar
         yScrollbar.grid_forget()
+
+        # Grabbing loop image
+        filepath = "icons8-loop-100.png"
+        self.loopImage = ctk.CTkImage(light_image=Image.open(
+            filepath), dark_image=Image.open(filepath), size=(25, 25))
 
         # Adding widgets onto frame
         # App title
@@ -71,7 +81,7 @@ class Frame(ctk.CTkScrollableFrame):
         self.sliderTooltip = CTkToolTip(self.volume, message="Volume: 100")
 
         self.LoadData()
-    
+
     def LoadData(self):
         dataframe = pd.read_csv("Data.csv", header=None)
 
@@ -80,7 +90,6 @@ class Frame(ctk.CTkScrollableFrame):
 
         for i in range(len(buttonNameDictionary)):
             self.AddButton(soundFileDictionary[i], buttonNameDictionary[i])
-
 
     def AddButton(self, soundFile=None, buttonName=None):
 
@@ -125,11 +134,15 @@ class Frame(ctk.CTkScrollableFrame):
         buttons[buttonId].grid(row=rowSpot, column=columnSpot, columnspan=2,
                                padx=paddingx, pady=15, sticky="ewns")
 
-        # checkboxVar = ctk.BooleanVar()
-        checkboxDictionary[buttonId] = ctk.CTkCheckBox(
-            master=self, text="Loop?", font=self.checkboxFont, command=lambda: self.CheckboxChecked(buttonId))
-        checkboxDictionary[buttonId].grid(row=rowSpot+1, column=columnSpot,
-                                          padx=(20, 0), pady=0)
+        # loopDictionary[buttonId] = ctk.CTkCheckBox(
+        #     master=self, text="Loop?", font=self.checkboxFont, command=lambda: self.CheckboxChecked(buttonId))
+        # loopDictionary[buttonId].grid(row=rowSpot+1, column=columnSpot,
+        #                                   padx=(20, 0), pady=0)
+
+        loopDictionary[buttonId] = ctk.CTkButton(
+            master=self, text="", image=self.loopImage, fg_color="transparent", hover_color="#3c3c3c", command=lambda: self.LoopChecked(buttonId))
+        loopDictionary[buttonId].grid(row=rowSpot+1, column=columnSpot,
+                                      padx=(20, 0), pady=0)
 
         sliderDictionary[buttonId] = ctk.CTkSlider(
             master=self, from_=0, to=1.0)
@@ -168,21 +181,22 @@ class Frame(ctk.CTkScrollableFrame):
                 channelDictionary[buttonId].stop()
                 del channelDictionary[buttonId]
 
-        pprint.pprint(soundDictionary)
-
         # Grabbing empty sound channel
         newChannel = mixer.find_channel(force=True)
         channelDictionary[buttonId] = newChannel
 
         # Checking if loop is on
-        if checkboxDictionary[buttonId].get():
+        if loopDictionary[buttonId].cget("fg_color") == loopColor:
             newChannel.play(soundDictionary[buttonId], loops=-1)
         else:
             newChannel.play(soundDictionary[buttonId])
 
-    def CheckboxChecked(self, buttonId):
+    def LoopChecked(self, buttonId):
         # Checking if unchecked or checked
-        if not checkboxDictionary[buttonId].get():
+        if loopDictionary[buttonId].cget("fg_color") == "transparent":
+            loopDictionary[buttonId].configure(fg_color=loopColor)
+        else:
+            loopDictionary[buttonId].configure(fg_color="transparent")
             if channelDictionary[buttonId].get_busy():
                 channelDictionary[buttonId].stop()
 
