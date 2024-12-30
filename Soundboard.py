@@ -101,6 +101,8 @@ class Frame(ctk.CTkScrollableFrame):
         except pd.errors.EmptyDataError:
             return
 
+        print(dataframe.head())
+
         soundFileDictionary = dataframe.loc[0].to_dict()
         buttonNameDictionary = dataframe.loc[1].to_dict()
         loopValues = dataframe.loc[2].to_dict()
@@ -264,7 +266,27 @@ class Frame(ctk.CTkScrollableFrame):
         del buttonNameDictionary[buttonId]
         del tooltipDictionary[buttonId]
 
+        # Saving
         self.WriteToFile()
+
+        # Clearing
+        for i in buttons:
+            buttons[i].destroy()
+            loopDictionary[i].destroy()
+            sliderDictionary[i].destroy()
+            deleteDictionary[i].destroy()
+
+        buttons.clear()
+        loopDictionary.clear()
+        soundDictionary.clear()
+        soundFileDictionary.clear()
+        buttonNameDictionary.clear()
+        tooltipDictionary.clear()
+        sliderDictionary.clear()
+        deleteDictionary.clear()
+        channelDictionary.clear()
+
+        self.LoadData()
 
     def WriteToFile(self):
         # Writing to file
