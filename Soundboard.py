@@ -95,13 +95,13 @@ class Frame(ctk.CTkScrollableFrame):
         soundFileDictionary = dataframe.loc[0].to_dict()
         buttonNameDictionary = dataframe.loc[1].to_dict()
         loopValues = dataframe.loc[2].to_dict()
+        sliderValues = dataframe.loc[3].to_dict()
 
         for i in range(len(buttonNameDictionary)):
             self.AddButton(
-                soundFileDictionary[i], buttonNameDictionary[i], loopValues[i])
+                soundFileDictionary[i], buttonNameDictionary[i], loopValues[i], sliderValues[i])
 
-    def AddButton(self, soundFile=None, buttonName=None, loopValue=None):
-
+    def AddButton(self, soundFile=None, buttonName=None, loopValue=None, sliderValue=None):
         # Asking user to associate file with button
         if soundFile is None:
             soundFile = tk.filedialog.askopenfilename()
@@ -160,9 +160,14 @@ class Frame(ctk.CTkScrollableFrame):
         deleteDictionary[buttonId].grid(
             row=rowSpot+1, column=columnSpot+1, padx=(5, 0), pady=0)
 
+        if sliderValue is None:
+            volume = 1.0
+        else:
+            volume = float(sliderValue)
+
         sliderDictionary[buttonId] = ctk.CTkSlider(
             master=self, from_=0, to=1.0)
-        sliderDictionary[buttonId].set(1.0)
+        sliderDictionary[buttonId].set(volume)
         sliderDictionary[buttonId].configure(
             command=lambda value: self.ChangeChannelVolume(buttonId, value))
         sliderDictionary[buttonId].grid(
@@ -226,7 +231,6 @@ class Frame(ctk.CTkScrollableFrame):
 
     def DeleteSound(self, buttonId):
         # Destroying and then updating dictionaries
-
         buttons[buttonId].destroy()
         del buttons[buttonId]
 
@@ -257,14 +261,17 @@ class Frame(ctk.CTkScrollableFrame):
             writer.writerow(buttonNameDictionary.values())
 
             loopValues = []
+            sliderValues = []
             for i in loopDictionary:
                 if loopDictionary[i].cget("fg_color") == loopColor:
                     loopValues.append(1)
                 else:
                     loopValues.append(0)
 
+                sliderValues.append(sliderDictionary[i].get())
+
             writer.writerow(loopValues)
-            # writer.writerow(buttonNameDictionary.values())
+            writer.writerow(sliderValues)
 
 
 class App(ctk.CTk):
