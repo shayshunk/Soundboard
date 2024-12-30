@@ -6,6 +6,7 @@ from math import floor
 from CTkToolTip import *
 import pprint
 import csv
+import pandas as pd
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -69,6 +70,18 @@ class Frame(ctk.CTkScrollableFrame):
         # Tool tip
         self.sliderTooltip = CTkToolTip(self.volume, message="Volume: 100")
 
+        self.LoadData()
+    
+    def LoadData(self):
+        dataframe = pd.read_csv("Data.csv", header=None)
+
+        soundFileDictionary = dataframe.loc[0].to_dict()
+        buttonNameDictionary = dataframe.loc[1].to_dict()
+
+        for i in range(len(buttonNameDictionary)):
+            self.AddButton(soundFileDictionary[i], buttonNameDictionary[i])
+
+
     def AddButton(self, soundFile=None, buttonName=None):
 
         # Asking user to associate file with button
@@ -87,14 +100,14 @@ class Frame(ctk.CTkScrollableFrame):
             buttonName = "Unnamed"
 
         # Assigning new button to dictionary
-        buttonId = str(len(buttons) + 1)
+        buttonId = len(buttons)
 
         # Associating sound with dictionary
         soundFileDictionary[buttonId] = soundFile
         soundDictionary[buttonId] = mixer.Sound(soundFile)
 
         # Figuring out where to place new button
-        totalButtons = len(buttons)
+        totalButtons = buttonId
         columnSpot = ((2 * totalButtons) % columns)
         rowSpot = 2 * floor(totalButtons * 2 / columns) + 2
 
@@ -140,10 +153,13 @@ class Frame(ctk.CTkScrollableFrame):
         with open("Data.csv", 'w', newline='') as file:
             writer = csv.writer(file)
 
-            for key, value in soundFileDictionary.items():
-                writer.writerow([value])
-            for key, value in buttonNameDictionary.items():
-                writer.writerow([value])
+            writer.writerow(soundFileDictionary.values())
+            writer.writerow(buttonNameDictionary.values())
+
+        #     for key, value in soundFileDictionary.items():
+        #         writer.writerow([value])
+        #     for key, value in buttonNameDictionary.items():
+        #         writer.writerow([value])
 
     def PlaySound(self, buttonId):
         # Checking if that sound is already playing
