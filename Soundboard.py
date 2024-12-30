@@ -8,6 +8,7 @@ import pprint
 import csv
 import pandas as pd
 from PIL import Image
+import os.path
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -95,6 +96,10 @@ class Frame(ctk.CTkScrollableFrame):
         self.WriteToFile()
 
     def LoadData(self):
+        # Check if csv exists
+        if not os.path.isfile("Data.csv"):
+            return
+
         # Checking if csv is empty
         try:
             dataframe = pd.read_csv("Data.csv", header=None)
@@ -215,9 +220,10 @@ class Frame(ctk.CTkScrollableFrame):
 
         # Checking if loop is on
         if loopDictionary[buttonId].cget("fg_color") == loopColor:
-            newChannel.play(soundDictionary[buttonId], loops=-1)
+            channelDictionary[buttonId].play(
+                soundDictionary[buttonId], loops=-1)
         else:
-            newChannel.play(soundDictionary[buttonId])
+            channelDictionary[buttonId].play(soundDictionary[buttonId])
 
     def LoopChecked(self, buttonId):
         # Checking if unchecked or checked
@@ -246,6 +252,11 @@ class Frame(ctk.CTkScrollableFrame):
             soundDictionary[buttonId].set_volume(value)
 
     def DeleteSound(self, buttonId):
+        # Check if sound playing
+        if buttonId in channelDictionary:
+            if channelDictionary[buttonId].get_busy():
+                channelDictionary[buttonId].stop()
+
         # Destroying and then updating dictionaries
         buttons[buttonId].destroy()
         del buttons[buttonId]
