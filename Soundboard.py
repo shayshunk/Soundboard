@@ -4,7 +4,6 @@ from pygame import mixer
 from pygame import time
 from math import floor
 from CTkToolTip import *
-import pandas as pd
 import pprint
 import csv
 
@@ -26,9 +25,6 @@ channelDictionary = {}
 checkboxDictionary = {}
 sliderDictionary = {}
 tooltipDictionary = {}
-
-soundboardData = pd.DataFrame()
-
 
 class Frame(ctk.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
