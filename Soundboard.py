@@ -5,7 +5,6 @@ from pygame import time
 from math import floor
 from CTkToolTip import *
 import pandas as pd
-from CTkMenuBar import *
 import pprint
 import csv
 
