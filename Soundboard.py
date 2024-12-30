@@ -94,11 +94,13 @@ class Frame(ctk.CTkScrollableFrame):
 
         soundFileDictionary = dataframe.loc[0].to_dict()
         buttonNameDictionary = dataframe.loc[1].to_dict()
+        loopValues = dataframe.loc[2].to_dict()
 
         for i in range(len(buttonNameDictionary)):
-            self.AddButton(soundFileDictionary[i], buttonNameDictionary[i])
+            self.AddButton(
+                soundFileDictionary[i], buttonNameDictionary[i], loopValues[i])
 
-    def AddButton(self, soundFile=None, buttonName=None):
+    def AddButton(self, soundFile=None, buttonName=None, loopValue=None):
 
         # Asking user to associate file with button
         if soundFile is None:
@@ -140,16 +142,14 @@ class Frame(ctk.CTkScrollableFrame):
         buttons[buttonId].configure(width=150, height=100)
         buttons[buttonId].grid(row=rowSpot, column=columnSpot, columnspan=3,
                                padx=paddingx, pady=15, sticky="ewns")
-        print("Column spot:", columnSpot)
-        print("Row spot:", rowSpot)
 
-        # loopDictionary[buttonId] = ctk.CTkCheckBox(
-        #     master=self, text="Loop?", font=self.checkboxFont, command=lambda: self.CheckboxChecked(buttonId))
-        # loopDictionary[buttonId].grid(row=rowSpot+1, column=columnSpot,
-        #                                   padx=(20, 0), pady=0)
+        if loopValue == '1':
+            fgColor = loopColor
+        else:
+            fgColor = "transparent"
 
         loopDictionary[buttonId] = ctk.CTkButton(
-            master=self, text="", image=self.loopImage, fg_color="transparent", hover_color="#3c3c3c", command=lambda: self.LoopChecked(buttonId))
+            master=self, text="", image=self.loopImage, fg_color=fgColor, hover_color="#3c3c3c", command=lambda: self.LoopChecked(buttonId))
         loopDictionary[buttonId].configure(width=50, height=50)
         loopDictionary[buttonId].grid(row=rowSpot+1, column=columnSpot,
                                       padx=(5, 0), pady=0)
@@ -179,11 +179,7 @@ class Frame(ctk.CTkScrollableFrame):
         buttonNameDictionary[buttonId] = buttons[buttonId].cget("text")
 
         # Writing to file
-        with open("Data.csv", 'w', newline='') as file:
-            writer = csv.writer(file)
-
-            writer.writerow(soundFileDictionary.values())
-            writer.writerow(buttonNameDictionary.values())
+        self.WriteToFile()
 
     def PlaySound(self, buttonId):
         # Checking if that sound is already playing
@@ -208,8 +204,11 @@ class Frame(ctk.CTkScrollableFrame):
             loopDictionary[buttonId].configure(fg_color=loopColor)
         else:
             loopDictionary[buttonId].configure(fg_color="transparent")
-            if channelDictionary[buttonId].get_busy():
-                channelDictionary[buttonId].stop()
+            if buttonId in channelDictionary:
+                if channelDictionary[buttonId].get_busy():
+                    channelDictionary[buttonId].stop()
+
+        self.WriteToFile()
 
     def ChangeVolume(self, value):
         self.sliderTooltip.configure(
@@ -246,6 +245,26 @@ class Frame(ctk.CTkScrollableFrame):
             del channelDictionary[buttonId]
         del buttonNameDictionary[buttonId]
         del tooltipDictionary[buttonId]
+
+        self.WriteToFile()
+
+    def WriteToFile(self):
+        # Writing to file
+        with open("Data.csv", 'w', newline='') as file:
+            writer = csv.writer(file)
+
+            writer.writerow(soundFileDictionary.values())
+            writer.writerow(buttonNameDictionary.values())
+
+            loopValues = []
+            for i in loopDictionary:
+                if loopDictionary[i].cget("fg_color") == loopColor:
+                    loopValues.append(1)
+                else:
+                    loopValues.append(0)
+
+            writer.writerow(loopValues)
+            # writer.writerow(buttonNameDictionary.values())
 
 
 class App(ctk.CTk):
