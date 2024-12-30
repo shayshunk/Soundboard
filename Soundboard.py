@@ -256,6 +256,7 @@ class Frame(ctk.CTkScrollableFrame):
         if buttonId in channelDict:
             if channelDict[buttonId].get_busy():
                 channelDict[buttonId].stop()
+                print("Stopped looping sound that was deleted!")
 
         # Destroying and then updating dictionaries
         buttons[buttonId].destroy()
