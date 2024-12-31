@@ -20,15 +20,15 @@ mixer.set_num_channels(totalChannels)
 columns = 9
 span = columns - 3
 
-buttons = {}
-buttonNameDict = {}
-soundDict = {}
-soundFileDict = {}
+buttons = []
+buttonNameList = []
+soundList = []
+soundFileList = []
 channelDict = {}
-loopDict = {}
-sliderDict = {}
-tooltipDict = {}
-deleteDict = {}
+loopList = []
+sliderList = []
+tooltipList = []
+deleteList = []
 
 loopColor = "#383838"
 
@@ -108,17 +108,20 @@ class Frame(ctk.CTkScrollableFrame):
 
         print(dataframe.head())
 
-        soundFileDict = dataframe.loc[0].to_dict()
-        buttonNameDict = dataframe.loc[1].to_dict()
+        if (len(dataframe) != 5):
+            return
+
+        soundFileList = dataframe.loc[0].to_dict()
+        buttonNameList = dataframe.loc[1].to_dict()
         loopValues = dataframe.loc[2].to_dict()
         sliderValues = dataframe.loc[3].to_dict()
         volumeValue = float(dataframe.loc[4][0])
 
         self.volume.set(volumeValue)
 
-        for i in range(len(buttonNameDict)):
+        for i in range(len(buttonNameList)):
             self.AddButton(
-                soundFileDict[i], buttonNameDict[i], loopValues[i], sliderValues[i])
+                soundFileList[i], buttonNameList[i], loopValues[i], sliderValues[i])
 
     def AddButton(self, soundFile=None, buttonName=None, loopValue=None, sliderValue=None):
         # Asking user to associate file with button
@@ -136,12 +139,12 @@ class Frame(ctk.CTkScrollableFrame):
         if buttonName == "":
             buttonName = "Unnamed"
 
-        # Assigning new button to Dict
+        # Assigning new button to List
         buttonId = len(buttons)
 
-        # Associating sound with Dict
-        soundFileDict[buttonId] = soundFile
-        soundDict[buttonId] = mixer.Sound(soundFile)
+        # Associating sound with List
+        soundFileList.append(soundFile)
+        soundList.append(mixer.Sound(soundFile))
 
         # Figuring out where to place new button
         totalButtons = buttonId
@@ -156,8 +159,8 @@ class Frame(ctk.CTkScrollableFrame):
             paddingx = (10, 20)
 
         # Creating new button for sound
-        buttons[buttonId] = ctk.CTkButton(
-            master=self, text="", font=self.defaultFont)
+        buttons.append(ctk.CTkButton(
+            master=self, text="", font=self.defaultFont))
         buttons[buttonId].configure(width=150, height=100)
         buttons[buttonId].grid(row=rowSpot, column=columnSpot, columnspan=3,
                                padx=paddingx, pady=15, sticky="ewns")
@@ -167,16 +170,16 @@ class Frame(ctk.CTkScrollableFrame):
         else:
             fgColor = "transparent"
 
-        loopDict[buttonId] = ctk.CTkButton(
-            master=self, text="", image=self.loopImage, fg_color=fgColor, hover_color="#3c3c3c", command=lambda: self.LoopChecked(buttonId))
-        loopDict[buttonId].configure(width=50, height=50)
-        loopDict[buttonId].grid(row=rowSpot+1, column=columnSpot,
+        loopList.append(ctk.CTkButton(
+            master=self, text="", image=self.loopImage, fg_color=fgColor, hover_color="#3c3c3c", command=lambda: self.LoopChecked(buttonId)))
+        loopList[buttonId].configure(width=50, height=50)
+        loopList[buttonId].grid(row=rowSpot+1, column=columnSpot,
                                 padx=(5, 0), pady=0)
 
-        deleteDict[buttonId] = ctk.CTkButton(
-            master=self, text="", image=self.deleteImage, fg_color="transparent", hover_color="#3c3c3c", command=lambda: self.DeleteSound(buttonId))
-        deleteDict[buttonId].configure(width=50, height=50)
-        deleteDict[buttonId].grid(
+        deleteList.append(ctk.CTkButton(
+            master=self, text="", image=self.deleteImage, fg_color="transparent", hover_color="#3c3c3c", command=lambda: self.DeleteSound(buttonId)))
+        deleteList[buttonId].configure(width=50, height=50)
+        deleteList[buttonId].grid(
             row=rowSpot+1, column=columnSpot+1, padx=(5, 0), pady=0)
 
         if sliderValue is None:
@@ -184,25 +187,25 @@ class Frame(ctk.CTkScrollableFrame):
         else:
             volume = float(sliderValue)
 
-        sliderDict[buttonId] = ctk.CTkSlider(
-            master=self, from_=0, to=1.0)
-        sliderDict[buttonId].set(volume)
-        sliderDict[buttonId].configure(
+        sliderList.append(ctk.CTkSlider(
+            master=self, from_=0, to=1.0))
+        sliderList[buttonId].set(volume)
+        sliderList[buttonId].configure(
             command=lambda value: self.ChangeChannelVolume(buttonId, value))
-        sliderDict[buttonId].bind("<ButtonRelease-1>",
+        sliderList[buttonId].bind("<ButtonRelease-1>",
                                   lambda event: self.VolumeSave(event))
-        sliderDict[buttonId].grid(
+        sliderList[buttonId].grid(
             row=rowSpot+1, column=columnSpot+2, padx=(0, 20), pady=0, sticky='ew')
-        tooltipDict[buttonId] = CTkToolTip(
-            sliderDict[buttonId], message="Volume: 100")
+        tooltipList.append(CTkToolTip(
+            sliderList[buttonId], message="Volume: 100"))
 
         buttons[buttonId].configure(text=buttonName)
 
         # Changing what clicking the button does
         buttons[buttonId].configure(command=lambda: self.PlaySound(buttonId))
 
-        # Grabbing names for Dict
-        buttonNameDict[buttonId] = buttons[buttonId].cget("text")
+        # Grabbing names for List
+        buttonNameList.append(buttons[buttonId].cget("text"))
 
         # Writing to file
         self.WriteToFile()
@@ -219,18 +222,18 @@ class Frame(ctk.CTkScrollableFrame):
         channelDict[buttonId] = newChannel
 
         # Checking if loop is on
-        if loopDict[buttonId].cget("fg_color") == loopColor:
+        if loopList[buttonId].cget("fg_color") == loopColor:
             channelDict[buttonId].play(
-                soundDict[buttonId], loops=-1)
+                soundList[buttonId], loops=-1)
         else:
-            channelDict[buttonId].play(soundDict[buttonId])
+            channelDict[buttonId].play(soundList[buttonId])
 
     def LoopChecked(self, buttonId):
         # Checking if unchecked or checked
-        if loopDict[buttonId].cget("fg_color") == "transparent":
-            loopDict[buttonId].configure(fg_color=loopColor)
+        if loopList[buttonId].cget("fg_color") == "transparent":
+            loopList[buttonId].configure(fg_color=loopColor)
         else:
-            loopDict[buttonId].configure(fg_color="transparent")
+            loopList[buttonId].configure(fg_color="transparent")
             if buttonId in channelDict:
                 if channelDict[buttonId].get_busy():
                     channelDict[buttonId].stop()
@@ -244,12 +247,12 @@ class Frame(ctk.CTkScrollableFrame):
             mixer.Channel(id).set_volume(value)
 
     def ChangeChannelVolume(self, buttonId, value):
-        if buttonId in tooltipDict:
-            tooltipDict[buttonId].configure(
+        if buttonId < len(tooltipList):
+            tooltipList[buttonId].configure(
                 message="Volume: " + str(int(value * 100)))
 
-        if buttonId in soundDict:
-            soundDict[buttonId].set_volume(value)
+        if buttonId < len(soundList):
+            soundList[buttonId].set_volume(value)
 
     def DeleteSound(self, buttonId):
         # Check if sound playing first
@@ -262,61 +265,66 @@ class Frame(ctk.CTkScrollableFrame):
         buttons[buttonId].destroy()
         del buttons[buttonId]
 
-        deleteDict[buttonId].destroy()
-        del deleteDict[buttonId]
+        deleteList[buttonId].destroy()
+        del deleteList[buttonId]
 
-        sliderDict[buttonId].destroy()
-        del sliderDict[buttonId]
+        sliderList[buttonId].destroy()
+        del sliderList[buttonId]
 
-        loopDict[buttonId].destroy()
-        del loopDict[buttonId]
+        loopList[buttonId].destroy()
+        del loopList[buttonId]
 
-        del soundDict[buttonId]
-        del soundFileDict[buttonId]
+        del soundList[buttonId]
+        del soundFileList[buttonId]
         if buttonId in channelDict:
             del channelDict[buttonId]
-        del buttonNameDict[buttonId]
-        del tooltipDict[buttonId]
+        del buttonNameList[buttonId]
+        del tooltipList[buttonId]
 
         # Saving
         self.WriteToFile()
 
+        # Rearrange grid
+
         # Clearing
         for i in buttons:
             buttons[i].destroy()
-            loopDict[i].destroy()
-            sliderDict[i].destroy()
-            deleteDict[i].destroy()
+            loopList[i].destroy()
+            sliderList[i].destroy()
+            deleteList[i].destroy()
 
         buttons.clear()
-        loopDict.clear()
-        soundDict.clear()
-        soundFileDict.clear()
-        buttonNameDict.clear()
-        tooltipDict.clear()
-        sliderDict.clear()
-        deleteDict.clear()
+        loopList.clear()
+        soundList.clear()
+        soundFileList.clear()
+        buttonNameList.clear()
+        tooltipList.clear()
+        sliderList.clear()
+        deleteList.clear()
         channelDict.clear()
 
         self.LoadData()
+
+    def RearrangeGrid(self):
+        print("Rearranging!")
 
     def WriteToFile(self):
         # Writing to file
         with open("Data.csv", 'w', newline='') as file:
             writer = csv.writer(file)
 
-            writer.writerow(soundFileDict.values())
-            writer.writerow(buttonNameDict.values())
+            writer.writerow(soundFileList)
+            writer.writerow(buttonNameList)
 
             loopValues = []
             sliderValues = []
-            for i in loopDict:
-                if loopDict[i].cget("fg_color") == loopColor:
+            for i in range(len(loopList)):
+                if loopList[i].cget("fg_color") == loopColor:
                     loopValues.append(1)
                 else:
                     loopValues.append(0)
 
-                sliderValues.append(sliderDict[i].get())
+                sliderValues.append(sliderList[i].get())
 
             writer.writerow(loopValues)
             writer.writerow(sliderValues)
