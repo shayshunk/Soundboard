@@ -9,6 +9,7 @@ import csv
 import pandas as pd
 from PIL import Image
 import os.path
+import pdb
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -105,8 +106,6 @@ class Frame(ctk.CTkScrollableFrame):
             dataframe = pd.read_csv("Data.csv", header=None)
         except pd.errors.EmptyDataError:
             return
-
-        print(dataframe.head())
 
         if (len(dataframe) != 5):
             return
@@ -261,52 +260,94 @@ class Frame(ctk.CTkScrollableFrame):
                 channelDict[buttonId].stop()
                 print("Stopped looping sound that was deleted!")
 
+        print("Deleting button: ", buttonId)
+
         # Destroying and then updating dictionaries
         buttons[buttonId].destroy()
-        del buttons[buttonId]
+        buttons.pop(buttonId)
 
         deleteList[buttonId].destroy()
-        del deleteList[buttonId]
+        deleteList.pop(buttonId)
 
         sliderList[buttonId].destroy()
-        del sliderList[buttonId]
+        sliderList.pop(buttonId)
 
         loopList[buttonId].destroy()
-        del loopList[buttonId]
+        loopList.pop(buttonId)
 
-        del soundList[buttonId]
-        del soundFileList[buttonId]
+        soundList.pop(buttonId)
+        soundFileList.pop(buttonId)
+        buttonNameList.pop(buttonId)
+        tooltipList.pop(buttonId)
+
         if buttonId in channelDict:
             del channelDict[buttonId]
-        del buttonNameList[buttonId]
-        del tooltipList[buttonId]
 
         # Saving
         self.WriteToFile()
 
         # Rearrange grid
+        self.RearrangeGrid()
 
         # Clearing
-        for i in buttons:
-            buttons[i].destroy()
-            loopList[i].destroy()
-            sliderList[i].destroy()
-            deleteList[i].destroy()
+        # for i in buttons:
+        #     buttons[i].destroy()
+        #     loopList[i].destroy()
+        #     sliderList[i].destroy()
+        #     deleteList[i].destroy()
 
-        buttons.clear()
-        loopList.clear()
-        soundList.clear()
-        soundFileList.clear()
-        buttonNameList.clear()
-        tooltipList.clear()
-        sliderList.clear()
-        deleteList.clear()
-        channelDict.clear()
+        # buttons.clear()
+        # loopList.clear()
+        # soundList.clear()
+        # soundFileList.clear()
+        # buttonNameList.clear()
+        # tooltipList.clear()
+        # sliderList.clear()
+        # deleteList.clear()
+        # channelDict.clear()
 
-        self.LoadData()
+        # self.LoadData()
 
     def RearrangeGrid(self):
-        print("Rearranging!")
+        # Figuring out where to place buttons
+        totalButtons = len(buttons)
+
+        for i in range(totalButtons):
+
+            columnSpot = ((3 * i) % columns)
+            rowSpot = 2 * floor(i * 3 / columns) + 2
+
+            paddingx = (10, 10)
+
+            if columnSpot == 0:
+                paddingx = (20, 10)
+            elif columnSpot == columns - 3:
+                paddingx = (10, 20)
+
+            buttons[i].grid_configure(row=rowSpot, column=columnSpot, columnspan=3,
+                                      padx=paddingx, pady=15, sticky="ew")
+            buttons[i].configure(width=150, height=100)
+            buttons[i].configure(command=lambda index=i: self.PlaySound(index))
+
+            sliderList[i].grid_configure(
+                row=rowSpot+1, column=columnSpot+2, padx=(0, 20), pady=0, sticky='ew')
+            sliderList[i].configure(
+                command=lambda value, index=i: self.ChangeChannelVolume(index, value))
+
+            deleteList[i].grid_configure(
+                row=rowSpot+1, column=columnSpot+1, padx=(5, 0), pady=0)
+            deleteList[i].configure(width=50, height=50)
+            deleteList[i].configure(
+                command=lambda index=i: self.DeleteSound(index))
+
+            loopList[i].grid_configure(
+                row=rowSpot+1, column=columnSpot, padx=(5, 0), pady=0)
+            loopList[i].configure(width=50, height=50)
+            loopList[i].configure(
+                command=lambda index=i: self.LoopChecked(index))
+
+            tooltipList[i] = CTkToolTip(
+                sliderList[i], message="Volume: 100")
 
     def WriteToFile(self):
         # Writing to file
