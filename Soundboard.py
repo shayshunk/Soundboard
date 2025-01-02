@@ -12,7 +12,7 @@ import os.path
 import pdb
 
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
+ctk.set_default_color_theme("dark-blue")
 
 mixer.init()
 totalChannels = 8
@@ -37,9 +37,8 @@ loopColor = "#383838"
 class Frame(ctk.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-        self.titleFont = ctk.CTkFont(family='Agency FB', size=32)
+        self.titleFont = ctk.CTkFont(family='Agency FB', size=36)
         self.defaultFont = ctk.CTkFont(family='Agency FB', size=24)
-        self.checkboxFont = ctk.CTkFont(family='Agency FB', size=18)
 
         for i in range(columns):
             if i % 3 == 1:
@@ -66,26 +65,31 @@ class Frame(ctk.CTkScrollableFrame):
         # App title
         self.titleLabel = ctk.CTkLabel(
             master=self, text="Soundboard", font=self.titleFont)
-        self.titleLabel.grid(row=0, column=0, columnspan=span,
-                             padx=20, pady=20, sticky='WENS')
+        self.titleLabel.grid(row=0, column=3, columnspan=3,
+                             padx=20, pady=20, sticky='ewns')
 
+        # Alphabetize button
+        self.alphabetizeButton = ctk.CTkButton(
+            master=self, text="Alphabetize", command=lambda: self.Alphabetize(), font=self.defaultFont)
+        self.alphabetizeButton.grid(
+            row=1, column=span, columnspan=3)
         # Add sound button
         self.button = ctk.CTkButton(
             master=self, text="Add Sound", command=lambda: self.AddButton(), font=self.defaultFont)
-        self.button.grid(row=0, column=span, columnspan=3,
-                         padx=20, pady=20, sticky='WENS')
+        self.button.grid(row=1, column=0, columnspan=3,
+                         padx=20, pady=20, sticky='ewns')
 
         # Volume text
         self.volumeLabel = ctk.CTkLabel(
             master=self, text="Master Volume", font=self.defaultFont)
-        self.volumeLabel.grid(row=1, column=0, columnspan=3,
+        self.volumeLabel.grid(row=2, column=0, columnspan=3,
                               padx=20, pady=20, sticky='WENS')
 
         # Volume slider
         self.volume = ctk.CTkSlider(
             master=self, from_=0, to=1.0, command=self.ChangeVolume)
         self.volume.set(1.0)
-        self.volume.grid(row=1, column=3, columnspan=span,
+        self.volume.grid(row=2, column=3, columnspan=span,
                          padx=20, pady=20, sticky="EWNS")
         self.volume.bind("<ButtonRelease-1>",
                          lambda event: self.VolumeSave(event))
@@ -150,7 +154,7 @@ class Frame(ctk.CTkScrollableFrame):
         # Figuring out where to place new button
         totalButtons = buttonId
         columnSpot = ((3 * totalButtons) % columns)
-        rowSpot = 2 * floor(totalButtons * 3 / columns) + 2
+        rowSpot = 2 * floor(totalButtons * 3 / columns) + 3
 
         paddingx = (10, 10)
 
@@ -255,14 +259,74 @@ class Frame(ctk.CTkScrollableFrame):
         if buttonId < len(soundList):
             soundList[buttonId].set_volume(value)
 
+    def Alphabetize(self):
+        # Getting global variables because it's being weird about it
+        global buttons
+        global buttonNameList
+        global soundList
+        global soundFileList
+        global channelDict
+        global loopList
+        global sliderList
+        global tooltipList
+        global deleteList
+
+        # Sorting by button name
+        indexes = sorted(
+            range(len(buttonNameList)), key=buttonNameList.__getitem__)
+        print(indexes)
+
+        # Sorting all lists
+        buttonNameList = list(map(buttonNameList.__getitem__, indexes))
+        buttons = list(map(buttons.__getitem__, indexes))
+        soundList = list(map(soundList.__getitem__, indexes))
+        loopList = list(map(loopList.__getitem__, indexes))
+        sliderList = list(map(sliderList.__getitem__, indexes))
+        tooltipList = list(map(tooltipList.__getitem__, indexes))
+        deleteList = list(map(deleteList.__getitem__, indexes))
+        soundFileList = list(map(soundFileList.__getitem__, indexes))
+
+        print("Dictionary before sorting")
+        pprint.pprint(channelDict)
+
+        # Dictionary sorting
+        counter = 0
+        swapList = []
+        for index in indexes:
+            if index == counter:
+                counter = counter + 1
+                print("Moving on!")
+                continue
+
+            if index in channelDict and index not in swapList:
+                swapList.append(index)
+                print("Index found")
+                if counter in channelDict:
+                    print("Counter found")
+                    swapList.append(counter)
+                    temp = channelDict[counter]
+                    channelDict[counter] = channelDict[index]
+                    channelDict[index] = temp
+                else:
+                    print("Counter not found")
+                    channelDict[counter] = channelDict[index]
+                    del channelDict[index]
+
+            counter = counter + 1
+
+        print("Dictionary after sorting")
+        pprint.pprint(channelDict)
+
+        # Saving and rearrangings
+        self.WriteToFile()
+        self.RearrangeGrid()
+
     def DeleteSound(self, buttonId):
         # Check if sound playing first
         if buttonId in channelDict:
             if channelDict[buttonId].get_busy():
                 channelDict[buttonId].stop()
                 print("Stopped looping sound that was deleted!")
-
-        print("Deleting button: ", buttonId)
 
         # Destroying and then updating dictionaries
         buttons[buttonId].destroy()
@@ -298,7 +362,7 @@ class Frame(ctk.CTkScrollableFrame):
         for i in range(totalButtons):
 
             columnSpot = ((3 * i) % columns)
-            rowSpot = 2 * floor(i * 3 / columns) + 2
+            rowSpot = 2 * floor(i * 3 / columns) + 3
 
             paddingx = (10, 10)
 
@@ -310,11 +374,11 @@ class Frame(ctk.CTkScrollableFrame):
             buttons[i].grid_configure(row=rowSpot, column=columnSpot)
             buttons[i].configure(command=lambda index=i: self.PlaySound(index))
 
-            sliderList[i].grid_configure(row=rowSpot+1, column=columnSpot+2)
+            sliderList[i].grid_configure(row=rowSpot+1, column=columnSpot+1)
             sliderList[i].configure(
                 command=lambda value, index=i: self.ChangeChannelVolume(index, value))
 
-            deleteList[i].grid_configure(row=rowSpot+1, column=columnSpot+1)
+            deleteList[i].grid_configure(row=rowSpot+1, column=columnSpot+2)
             deleteList[i].configure(
                 command=lambda index=i: self.DeleteSound(index))
 
