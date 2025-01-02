@@ -12,13 +12,13 @@ import os.path
 import pdb
 
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("dark-blue")
+ctk.set_default_color_theme("themes/lavender.json")
 
 mixer.init()
 totalChannels = 8
 mixer.set_num_channels(totalChannels)
 
-columns = 9
+columns = 12
 span = columns - 3
 
 buttons = []
@@ -63,39 +63,45 @@ class Frame(ctk.CTkScrollableFrame):
 
         # Adding widgets onto frame
         # App title
+        if columns % 2 == 0:
+            midpoint = int(columns/2) - 2
+        else:
+            midpoint = int(columns/2) - 1
+
+        width = int(columns/3)
         self.titleLabel = ctk.CTkLabel(
             master=self, text="Soundboard", font=self.titleFont)
-        self.titleLabel.grid(row=0, column=3, columnspan=3,
+        self.titleLabel.grid(row=0, column=midpoint, columnspan=width,
                              padx=20, pady=20, sticky='ewns')
 
         # Add Sound button
         self.button = ctk.CTkButton(
             master=self, text="Add Sound", command=lambda: self.AddButton(), font=self.defaultFont)
-        self.button.grid(row=1, column=0, columnspan=3,
+        self.button.grid(row=1, column=0, columnspan=width,
                          padx=20, pady=20)
+
+        # Reset button
+        self.resetButton = ctk.CTkButton(
+            master=self, text="Reset", command=lambda: self.ResetVolume(), font=self.defaultFont)
+        self.resetButton.grid(row=1, column=width, columnspan=width)
 
         # Alphabetize button
         self.alphabetizeButton = ctk.CTkButton(
             master=self, text="Alphabetize", command=lambda: self.Alphabetize(), font=self.defaultFont)
         self.alphabetizeButton.grid(
-            row=1, column=span, columnspan=3)
-
-        # Reset button
-        self.resetButton = ctk.CTkButton(
-            master=self, text="Reset", command=lambda: self.ResetVolume(), font=self.defaultFont)
-        self.resetButton.grid(row=1, column=3, columnspan=3)
+            row=1, column=width*2, columnspan=width)
 
         # Volume text
         self.volumeLabel = ctk.CTkLabel(
             master=self, text="Master Volume", font=self.defaultFont)
-        self.volumeLabel.grid(row=2, column=0, columnspan=3,
+        self.volumeLabel.grid(row=2, column=0, columnspan=width,
                               padx=20, pady=20, sticky='WENS')
 
         # Volume slider
         self.volume = ctk.CTkSlider(
             master=self, from_=0, to=1.0, command=self.ChangeVolume)
         self.volume.set(1.0)
-        self.volume.grid(row=2, column=3, columnspan=span,
+        self.volume.grid(row=2, column=width, columnspan=span,
                          padx=20, pady=20, sticky="EWNS")
         self.volume.bind("<ButtonRelease-1>",
                          lambda event: self.VolumeSave(event))
@@ -202,7 +208,7 @@ class Frame(ctk.CTkScrollableFrame):
             master=self, text="", image=self.deleteImage, fg_color="transparent", hover_color="#3c3c3c", command=lambda: self.DeleteSound(buttonId)))
         deleteList[buttonId].configure(width=50, height=50)
         deleteList[buttonId].grid(
-            row=rowSpot+1, column=columnSpot+2, padx=(5, 0), pady=0)
+            row=rowSpot+1, column=columnSpot+2, padx=(0, 10), pady=0)
 
         # Loading volume
         if sliderValue is None:
@@ -219,7 +225,7 @@ class Frame(ctk.CTkScrollableFrame):
         sliderList[buttonId].bind("<ButtonRelease-1>",
                                   lambda event: self.VolumeSave(event))
         sliderList[buttonId].grid(
-            row=rowSpot+1, column=columnSpot+1, padx=(0, 20), pady=0, sticky='ew')
+            row=rowSpot+1, column=columnSpot+1, padx=(5, 0), pady=0, sticky='ew')
         tooltipList.append(CTkToolTip(
             sliderList[buttonId], message="Volume: 100"))
 
