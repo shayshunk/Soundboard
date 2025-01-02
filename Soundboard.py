@@ -42,7 +42,7 @@ class Frame(ctk.CTkScrollableFrame):
         self.checkboxFont = ctk.CTkFont(family='Agency FB', size=18)
 
         for i in range(columns):
-            if i % 3 == 2:
+            if i % 3 == 1:
                 self.grid_columnconfigure(
                     i, weight=3, uniform="group1")
             else:
@@ -156,33 +156,40 @@ class Frame(ctk.CTkScrollableFrame):
 
         # Creating new button for sound
         buttons.append(ctk.CTkButton(
-            master=self, text="", font=self.defaultFont))
-        buttons[buttonId].configure(width=150, height=100)
+            master=self, text="", font=self.defaultFont, anchor="center"))
+        buttons[buttonId].configure(width=250, height=100)
         buttons[buttonId].grid(
-            row=rowSpot, column=columnSpot, columnspan=3, padx=paddingx, pady=15, sticky="ewns")
+            row=rowSpot, column=columnSpot, columnspan=3, padx=paddingx, pady=15)
+        # Adding name to button
+        buttons[buttonId].configure(text=buttonName)
 
+        # Setting up button toggle for looping
         if loopValue == '1':
             fgColor = loopColor
         else:
             fgColor = "transparent"
 
+        # Adding loop button
         loopList.append(ctk.CTkButton(
             master=self, text="", image=self.loopImage, fg_color=fgColor, hover_color="#3c3c3c", command=lambda: self.LoopChecked(buttonId)))
         loopList[buttonId].configure(width=50, height=50)
         loopList[buttonId].grid(row=rowSpot+1, column=columnSpot,
                                 padx=(5, 0), pady=0)
 
+        # Adding delete button
         deleteList.append(ctk.CTkButton(
             master=self, text="", image=self.deleteImage, fg_color="transparent", hover_color="#3c3c3c", command=lambda: self.DeleteSound(buttonId)))
         deleteList[buttonId].configure(width=50, height=50)
         deleteList[buttonId].grid(
-            row=rowSpot+1, column=columnSpot+1, padx=(5, 0), pady=0)
+            row=rowSpot+1, column=columnSpot+2, padx=(5, 0), pady=0)
 
+        # Loading volume
         if sliderValue is None:
             volume = 1.0
         else:
             volume = float(sliderValue)
 
+        # Adding volume slider
         sliderList.append(ctk.CTkSlider(
             master=self, from_=0, to=1.0))
         sliderList[buttonId].set(volume)
@@ -191,11 +198,9 @@ class Frame(ctk.CTkScrollableFrame):
         sliderList[buttonId].bind("<ButtonRelease-1>",
                                   lambda event: self.VolumeSave(event))
         sliderList[buttonId].grid(
-            row=rowSpot+1, column=columnSpot+2, padx=(0, 20), pady=0, sticky='ew')
+            row=rowSpot+1, column=columnSpot+1, padx=(0, 20), pady=0, sticky='ew')
         tooltipList.append(CTkToolTip(
             sliderList[buttonId], message="Volume: 100"))
-
-        buttons[buttonId].configure(text=buttonName)
 
         # Changing what clicking the button does
         buttons[buttonId].configure(command=lambda: self.PlaySound(buttonId))
