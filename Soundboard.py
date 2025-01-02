@@ -68,16 +68,22 @@ class Frame(ctk.CTkScrollableFrame):
         self.titleLabel.grid(row=0, column=3, columnspan=3,
                              padx=20, pady=20, sticky='ewns')
 
+        # Add Sound button
+        self.button = ctk.CTkButton(
+            master=self, text="Add Sound", command=lambda: self.AddButton(), font=self.defaultFont)
+        self.button.grid(row=1, column=0, columnspan=3,
+                         padx=20, pady=20)
+
         # Alphabetize button
         self.alphabetizeButton = ctk.CTkButton(
             master=self, text="Alphabetize", command=lambda: self.Alphabetize(), font=self.defaultFont)
         self.alphabetizeButton.grid(
             row=1, column=span, columnspan=3)
-        # Add sound button
-        self.button = ctk.CTkButton(
-            master=self, text="Add Sound", command=lambda: self.AddButton(), font=self.defaultFont)
-        self.button.grid(row=1, column=0, columnspan=3,
-                         padx=20, pady=20, sticky='ewns')
+
+        # Reset button
+        self.resetButton = ctk.CTkButton(
+            master=self, text="Reset", command=lambda: self.ResetVolume(), font=self.defaultFont)
+        self.resetButton.grid(row=1, column=3, columnspan=3)
 
         # Volume text
         self.volumeLabel = ctk.CTkLabel(
@@ -100,6 +106,17 @@ class Frame(ctk.CTkScrollableFrame):
         self.LoadData()
 
     def VolumeSave(self, event):
+        self.WriteToFile()
+
+    def ResetVolume(self):
+        # Resetting master volume
+        self.volume.set(1.0)
+
+        # Resetting individual volumes
+        for i in range(len(sliderList)):
+            sliderList[i].set(1.0)
+            loopList[i].configure(fg_color="transparent")
+
         self.WriteToFile()
 
     def LoadData(self):
