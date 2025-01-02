@@ -9,7 +9,6 @@ import csv
 import pandas as pd
 from PIL import Image
 import os.path
-import pdb
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("themes/lavender.json")
