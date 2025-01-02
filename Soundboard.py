@@ -43,9 +43,11 @@ class Frame(ctk.CTkScrollableFrame):
 
         for i in range(columns):
             if i % 3 == 2:
-                self.grid_columnconfigure(i, weight=3, uniform="group1")
+                self.grid_columnconfigure(
+                    i, weight=3, uniform="group1")
             else:
-                self.grid_columnconfigure(i, weight=0, uniform="group2")
+                self.grid_columnconfigure(
+                    i, weight=0, uniform="group2")
         # Hiding scrollbar
         yScrollbar = self._scrollbar
         yScrollbar.grid_forget()
@@ -152,17 +154,12 @@ class Frame(ctk.CTkScrollableFrame):
 
         paddingx = (10, 10)
 
-        if columnSpot == 0:
-            paddingx = (20, 10)
-        elif columnSpot == columns - 3:
-            paddingx = (10, 20)
-
         # Creating new button for sound
         buttons.append(ctk.CTkButton(
             master=self, text="", font=self.defaultFont))
         buttons[buttonId].configure(width=150, height=100)
-        buttons[buttonId].grid(row=rowSpot, column=columnSpot, columnspan=3,
-                               padx=paddingx, pady=15, sticky="ewns")
+        buttons[buttonId].grid(
+            row=rowSpot, column=columnSpot, columnspan=3, padx=paddingx, pady=15, sticky="ewns")
 
         if loopValue == '1':
             fgColor = loopColor
@@ -289,25 +286,6 @@ class Frame(ctk.CTkScrollableFrame):
         # Rearrange grid
         self.RearrangeGrid()
 
-        # Clearing
-        # for i in buttons:
-        #     buttons[i].destroy()
-        #     loopList[i].destroy()
-        #     sliderList[i].destroy()
-        #     deleteList[i].destroy()
-
-        # buttons.clear()
-        # loopList.clear()
-        # soundList.clear()
-        # soundFileList.clear()
-        # buttonNameList.clear()
-        # tooltipList.clear()
-        # sliderList.clear()
-        # deleteList.clear()
-        # channelDict.clear()
-
-        # self.LoadData()
-
     def RearrangeGrid(self):
         # Figuring out where to place buttons
         totalButtons = len(buttons)
@@ -324,30 +302,22 @@ class Frame(ctk.CTkScrollableFrame):
             elif columnSpot == columns - 3:
                 paddingx = (10, 20)
 
-            buttons[i].grid_configure(row=rowSpot, column=columnSpot, columnspan=3,
-                                      padx=paddingx, pady=15, sticky="ew")
-            buttons[i].configure(width=150, height=100)
+            buttons[i].grid_configure(row=rowSpot, column=columnSpot)
             buttons[i].configure(command=lambda index=i: self.PlaySound(index))
 
-            sliderList[i].grid_configure(
-                row=rowSpot+1, column=columnSpot+2, padx=(0, 20), pady=0, sticky='ew')
+            sliderList[i].grid_configure(row=rowSpot+1, column=columnSpot+2)
             sliderList[i].configure(
                 command=lambda value, index=i: self.ChangeChannelVolume(index, value))
 
-            deleteList[i].grid_configure(
-                row=rowSpot+1, column=columnSpot+1, padx=(5, 0), pady=0)
-            deleteList[i].configure(width=50, height=50)
+            deleteList[i].grid_configure(row=rowSpot+1, column=columnSpot+1)
             deleteList[i].configure(
                 command=lambda index=i: self.DeleteSound(index))
 
-            loopList[i].grid_configure(
-                row=rowSpot+1, column=columnSpot, padx=(5, 0), pady=0)
-            loopList[i].configure(width=50, height=50)
+            loopList[i].grid_configure(row=rowSpot+1, column=columnSpot)
             loopList[i].configure(
                 command=lambda index=i: self.LoopChecked(index))
 
-            tooltipList[i] = CTkToolTip(
-                sliderList[i], message="Volume: 100")
+            tooltipList[i] = CTkToolTip(sliderList[i], message="Volume: 100")
 
     def WriteToFile(self):
         # Writing to file
